@@ -16,16 +16,13 @@
     request_amount_from_bank(CustomerName, CustomerRequestedAmount, CustomerMap, BankMap, BankDict) ->
         receive
             {Sender, CustomerName} ->
-                % io:fwrite("MssssM ~w\n",[whereis('bmo')]),
                 
                 random:seed(now()),
-                % io:fwrite("MssssM ~w",[whereis('bmo')]),
                 BankKeySet = maps:keys(BankMap),
                 RandomKeyIndex = random:uniform(length(BankKeySet)),   
                 RandomBank = lists:nth(RandomKeyIndex,maps:keys(BankMap)),
                 random:seed(now()),
                 RandomAmountRequested = random:uniform(50) + 1,
-                % io:fwrite("From Customer ID: ~w,~w,~w,~w\n\n", [CustomerName, CustomerRequestedAmount, self(), RandomBank])
                 io:fwrite("? ~w requests a loan of ~w dollars(s) from the ~w bank\n", [CustomerName, RandomAmountRequested, RandomBank]),
                 case maps:get(RandomBank, BankDict) of
                 undefined ->
