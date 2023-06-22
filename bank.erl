@@ -5,4 +5,5 @@
         receive
             {Sender, BankName} ->
                 io:fwrite("From Bank ID: ~w,~w,~w,~w\n\n", [BankName, BankAmount, self(), Sender])
+                % io:fwrite("MM ~w",[whereis('bmo')])
         end.
