@@ -10,11 +10,15 @@ withdraw_amount_from_bank(BankName, BankAmount, BankMap) ->
         {ParentSender, Sender, CustomerName, RandomAmountRequested} ->
             if
                 BankAmount >= RandomAmountRequested ->
+                    UpdatedAmount = BankAmount - RandomAmountRequested,
+                    io:fwrite("Bank: ~w, Amount: ~w\n", [BankName, UpdatedAmount]),
                     Sender ! {"TransactionApproved", CustomerName, RandomAmountRequested, BankName, ParentSender},
                     ParentSender ! {"TransactionApproved", CustomerName, RandomAmountRequested, BankName},
-                    withdraw_amount_from_bank(BankName, BankAmount - RandomAmountRequested, BankMap);
+                    withdraw_amount_from_bank(BankName, UpdatedAmount, BankMap);
                 true ->
                     % Handle cases where BankAmount < RandomAmountRequested
+                    % UpdatedAmount = BankAmount - RandomAmountRequested,
+                    io:fwrite("Bank: ~w, Amount: ~w\n", [BankName, BankAmount]),
                     Sender ! {"TransactionRejected", CustomerName, RandomAmountRequested, BankName, ParentSender},
                     ParentSender ! {"TransactionRejected", CustomerName, RandomAmountRequested, BankName},
                     withdraw_amount_from_bank(BankName, BankAmount, BankMap)

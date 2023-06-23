@@ -1,7 +1,7 @@
 -module(money).
 -import(customer, [request_amount_from_bank/4]).
 -import(bank, [withdraw_amount_from_bank/3]).
--export([start/1, customer_loop/5, bank_loop/4, initialize_banks/1, initialize_customers/3]).
+-export([start/1, customer_loop/5, bank_loop/4, initialize_banks/1, initialize_customers/3, display_message_on_screen/0]).
 
     % get_value(Key, Map) ->
     %     case maps:get(Key, Map) of
@@ -23,7 +23,8 @@
 
         BankDict = initialize_banks(BankMap),
         % BankDict = 
-        initialize_customers(CustomerMap,BankMap, BankDict).
+        initialize_customers(CustomerMap,BankMap, BankDict),
+        display_message_on_screen().
         
 
 
@@ -65,3 +66,17 @@
         register(CustomerName, PId),
         PId ! {self(), CustomerName},
         customer_loop(CustomerMap, CustomerKeySet, BankMap, Index - 1, BankDict).
+
+    display_message_on_screen() ->
+        receive
+            {"TransactionApproved", CustomerName, AmountRequested, BankName} ->
+                io:fwrite("$ The ~w bank approves a loan of ~w dollar(s) to ~w\n",[BankName, AmountRequested, CustomerName]),
+                display_message_on_screen();
+            {"TransactionRejected", CustomerName, AmountRequested, BankName} ->
+                io:fwrite("$ The ~w bank denies a loan of ~w dollar(s) to ~w\n",[BankName, AmountRequested, CustomerName]),
+                display_message_on_screen();
+            {"TransactionRequest", CustomerName, AmountRequested, BankName} ->
+                io:fwrite("? ~w requests a loan of ~w dollar(s) from the ~w bank\n",[CustomerName, AmountRequested, BankName]),
+                display_message_on_screen()
+
+        end.
