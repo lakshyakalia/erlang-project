@@ -71,33 +71,27 @@
         PId ! {self(), CustomerName},
         customer_loop(CustomerMap, CustomerKeySet, BankMap, Index - 1, BankDict).
 
-    print_bank_list_tuples([]) ->
+    print_bank_list_tuples([], Original, Loaned) ->
+        io:fwrite("----\nTotal: original ~w, loaned ~w\n\n",[Original, Loaned]),
         ok;
-    print_bank_list_tuples([{X, Y, Z} | Tail]) ->
+    print_bank_list_tuples([{X, Y, Z} | Tail], Original, Loaned) ->
         io:format("~w: original ~w, balance ~w\n", [X, Z, Y]),
-        print_bank_list_tuples(Tail).
+        print_bank_list_tuples(Tail, Original + Z, Loaned + Z - Y).
 
-    print_customer_list_tuples([]) ->
+    print_customer_list_tuples([], Objective, Received) ->
+        io:fwrite("----\nTotal: objective ~w, received ~w",[Objective, Received]),
         ok;
-    print_customer_list_tuples([{X, Y, Z} | Tail]) ->
+    print_customer_list_tuples([{X, Y, Z} | Tail], Objective, Received) ->
         io:format("~w: objective ~w, received ~w\n", [X, Z, Y]),
-        print_customer_list_tuples(Tail).
+        print_customer_list_tuples(Tail, Objective + Z, Received + Y).
 
     display_bank_report(FinalBankList) ->
         io:fwrite("\n\nBanks:\n"),
-        % maps:fold(fun display_bank_report/3, ok, FinalBankDict).
-        % io:fwrite("fun"),
-        print_bank_list_tuples(FinalBankList).
-        % io:fwrite("~w",[FinalBankList]).
-
-    % display_bank_report(BankName, {OriginalAmount, BankAmount}, _Acc) ->
-    %     io:fwrite("~w: original ~w, balance ~w\n", [BankName, OriginalAmount, BankAmount]).
+        print_bank_list_tuples(FinalBankList, 0, 0).
 
     display_customer_report(FinalCustomerList) ->
-        io:fwrite("\n\nCustomers:\n"),
-        % io:fwrite("~w",[FinalCustomerList]).
-        print_customer_list_tuples(FinalCustomerList).
-        % io:fwrite("~w: objective ~w, received ~w\n",[CustomerName, OriginalRequestedAmount, CustomerAmount]).
+        io:fwrite("Customers:\n"),
+        print_customer_list_tuples(FinalCustomerList, 0 ,0).
 
     display_message_on_screen(BankMap, BankCount, CustomerMap, CustomerCount, FinalBankList, FinalCustomerList) ->
         receive
