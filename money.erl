@@ -68,7 +68,7 @@
         % io:format("ErrorrororCus~n"),
         PId = spawn(customer, request_amount_from_bank, [CustomerName, CustomerRequestedAmount, CustomerMap, BankMap, BankDict, CustomerRequestedAmount]),
         register(CustomerName, PId),
-        PId ! {self(), CustomerName},
+        PId ! {"Started",self()},
         customer_loop(CustomerMap, CustomerKeySet, BankMap, Index - 1, BankDict).
 
     print_bank_list_tuples([], Original, Loaned) ->
@@ -116,7 +116,6 @@
                         TempBankMap = maps:remove(BankName, BankMap),
                         TempTuple = {BankName, BankAmount, OriginalAmount},
                         NewList = [TempTuple | FinalBankList],
-                        display_bank_report(NewList),
                         display_message_on_screen(TempBankMap, BankCount, CustomerMap, CustomerCount, NewList, FinalCustomerList);
                     true ->
                         TempBankMap = maps:remove(BankName, BankMap),
@@ -130,7 +129,6 @@
             {"CustomerThreadEnded", CustomerName, CustomerAmount, OriginalRequestedAmount} ->
                 CurrentCustomerSize = maps:size(CustomerMap),
                 if CurrentCustomerSize == CustomerCount ->
-                    io:fwrite("\n\n** Banking Report **\n"),
                     TempCustomerMap = maps:remove(CustomerName, CustomerMap),
                     TempTuple = {CustomerName, CustomerAmount, OriginalRequestedAmount},
                     NewList = [TempTuple | FinalCustomerList],
@@ -140,7 +138,6 @@
                         TempCustomerMap = maps:remove(CustomerName, CustomerMap),
                         TempTuple = {CustomerName, CustomerAmount, OriginalRequestedAmount},
                         NewList = [TempTuple | FinalCustomerList],
-                        display_customer_report(NewList),
                         display_message_on_screen(BankMap, BankCount, TempCustomerMap, CustomerCount, FinalBankList, NewList);
                     true ->
                         TempCustomerMap = maps:remove(CustomerName, CustomerMap),
@@ -150,8 +147,11 @@
                     end
                 end
 
-            after 3000 ->
-                io:fwrite("\n\nThe financial market is closing for the day...\n")
+            after 1500 ->
+                io:fwrite("\n\n** Banking Report **\n\n"),
+                display_customer_report(FinalCustomerList),
+                display_bank_report(FinalBankList),
+                io:fwrite("The financial market is closing for the day...\n")
 
 
         end.

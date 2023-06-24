@@ -23,7 +23,7 @@ withdraw_amount_from_bank(BankName, BankAmount, BankMap, OriginalAmount) ->
             % io:fwrite("GG Guys!!\n"),
             
 
-        after 2000 ->
+        after 900 ->
             % io:fwrite(),
             ParentSender = whereis(moneyPid),
             ParentSender ! {"BankThreadEnded", BankName, BankAmount, OriginalAmount},

@@ -4,13 +4,18 @@
 
     request_amount_from_bank(CustomerName, CustomerRequestedAmount, CustomerMap, BankMap, BankDict, OriginalRequestedAmount) ->
         receive
+            {"Started", Sender} ->
+                timer:sleep(200),
+                % io:fwrite("Sleeped"),
+                self() ! {Sender, CustomerName},
+                request_amount_from_bank(CustomerName, CustomerRequestedAmount, CustomerMap, BankMap, BankDict, OriginalRequestedAmount);
             {Sender, CustomerName} ->
                 
-                random:seed(now()),
+                % random:seed(now()),
                 BankKeySet = maps:keys(BankMap),
                 RandomKeyIndex = rand:uniform(length(BankKeySet)),   
                 RandomBank = lists:nth(RandomKeyIndex,maps:keys(BankMap)),
-                random:seed(now()),
+                % random:seed(now()),
 
                 if CustomerRequestedAmount > 0 ->
                     if CustomerRequestedAmount > 50 ->
@@ -63,7 +68,7 @@
                     end,
                 request_amount_from_bank(CustomerName, CustomerRequestedAmount, CustomerMap, TempBankMap, BankDict, OriginalRequestedAmount)
 
-            after 2000 ->
+            after 900 ->
                 % io:fwrite("Ended!!!!"),
                 ParentSender = whereis(moneyPid),
                 ParentSender ! {"CustomerThreadEnded", CustomerName, OriginalRequestedAmount - CustomerRequestedAmount, OriginalRequestedAmount},
