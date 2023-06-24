@@ -13,13 +13,24 @@
                 random:seed(now()),
 
                 if CustomerRequestedAmount > 0 ->
-                    RandomAmountRequested = rand:uniform(50) + 1,
-                    Sender ! {"TransactionRequest", CustomerName, RandomAmountRequested, RandomBank},
-                    case maps:get(RandomBank, BankDict) of
-                        undefined ->
-                            io:fwrite("Bank not found in dictionary\n");
-                        Pid ->
-                            Pid ! {Sender, self(), CustomerName, RandomAmountRequested}
+                    if CustomerRequestedAmount > 50 ->
+                        RandomAmountRequested = rand:uniform(50) + 1,
+                        Sender ! {"TransactionRequest", CustomerName, RandomAmountRequested, RandomBank},
+                        case maps:get(RandomBank, BankDict) of
+                            undefined ->
+                                io:fwrite("Bank not found in dictionary\n");
+                            Pid ->
+                                Pid ! {Sender, self(), CustomerName, RandomAmountRequested}
+                        end;
+                    true ->
+                        RandomAmountRequested = rand:uniform(CustomerRequestedAmount),
+                        Sender ! {"TransactionRequest", CustomerName, RandomAmountRequested, RandomBank},
+                        case maps:get(RandomBank, BankDict) of
+                            undefined ->
+                                io:fwrite("Bank not found in dictionary\n");
+                            Pid ->
+                                Pid ! {Sender, self(), CustomerName, RandomAmountRequested}
+                        end
                     end;
                 true ->
                     % io:fwrite("Stopped"),
