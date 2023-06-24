@@ -71,18 +71,32 @@
         PId ! {self(), CustomerName},
         customer_loop(CustomerMap, CustomerKeySet, BankMap, Index - 1, BankDict).
 
+    print_bank_list_tuples([]) ->
+        ok;
+    print_bank_list_tuples([{X, Y, Z} | Tail]) ->
+        io:format("~w: original ~w, balance ~w\n", [X, Z, Y]),
+        print_bank_list_tuples(Tail).
+
+    print_customer_list_tuples([]) ->
+        ok;
+    print_customer_list_tuples([{X, Y, Z} | Tail]) ->
+        io:format("~w: objective ~w, received ~w\n", [X, Z, Y]),
+        print_customer_list_tuples(Tail).
+
     display_bank_report(FinalBankList) ->
         io:fwrite("\n\nBanks:\n"),
         % maps:fold(fun display_bank_report/3, ok, FinalBankDict).
         % io:fwrite("fun"),
-        io:fwrite("~w",[FinalBankList]).
+        print_bank_list_tuples(FinalBankList).
+        % io:fwrite("~w",[FinalBankList]).
 
-    display_bank_report(BankName, {OriginalAmount, BankAmount}, _Acc) ->
-        io:fwrite("~w: original ~w, balance ~w\n", [BankName, OriginalAmount, BankAmount]).
+    % display_bank_report(BankName, {OriginalAmount, BankAmount}, _Acc) ->
+    %     io:fwrite("~w: original ~w, balance ~w\n", [BankName, OriginalAmount, BankAmount]).
 
     display_customer_report(FinalCustomerList) ->
         io:fwrite("\n\nCustomers:\n"),
-        io:fwrite("~w",[FinalCustomerList]).
+        % io:fwrite("~w",[FinalCustomerList]).
+        print_customer_list_tuples(FinalCustomerList).
         % io:fwrite("~w: objective ~w, received ~w\n",[CustomerName, OriginalRequestedAmount, CustomerAmount]).
 
     display_message_on_screen(BankMap, BankCount, CustomerMap, CustomerCount, FinalBankList, FinalCustomerList) ->
