@@ -1,7 +1,7 @@
 -module(money).
 -import(customer, [request_amount_from_bank/4]).
 -import(bank, [withdraw_amount_from_bank/3]).
--export([start/1, customer_loop/5, bank_loop/4, initialize_banks/1, initialize_customers/3, display_message_on_screen/4]).
+-export([start/1, customer_loop/5, bank_loop/4, initialize_banks/1, initialize_customers/3, display_message_on_screen/6]).
 
     % get_value(Key, Map) ->
     %     case maps:get(Key, Map) of
@@ -28,7 +28,7 @@
         initialize_customers(CustomerMap,BankMap, BankDict),
         BankCount = maps:size(BankMap),
         CustomerCount = maps:size(CustomerMap),
-        display_message_on_screen(BankMap, BankCount, CustomerMap, CustomerCount).
+        display_message_on_screen(BankMap, BankCount, CustomerMap, CustomerCount, [], []).
         
 
 
@@ -71,33 +71,51 @@
         PId ! {self(), CustomerName},
         customer_loop(CustomerMap, CustomerKeySet, BankMap, Index - 1, BankDict).
 
-    display_bank_report(BankName, BankAmount, OriginalAmount) ->
-        io:fwrite("~w: original ~w, balance ~w\n",[BankName, OriginalAmount, BankAmount]).
+    display_bank_report(FinalBankList) ->
+        io:fwrite("\n\nBanks:\n"),
+        % maps:fold(fun display_bank_report/3, ok, FinalBankDict).
+        % io:fwrite("fun"),
+        io:fwrite("~w",[FinalBankList]).
 
-    display_customer_report(CustomerName, CustomerAmount, OriginalRequestedAmount) ->
-        io:fwrite("~w: objective ~w, received ~w\n",[CustomerName, OriginalRequestedAmount, CustomerAmount]).
+    display_bank_report(BankName, {OriginalAmount, BankAmount}, _Acc) ->
+        io:fwrite("~w: original ~w, balance ~w\n", [BankName, OriginalAmount, BankAmount]).
 
-    display_message_on_screen(BankMap, BankCount, CustomerMap, CustomerCount) ->
+    display_customer_report(FinalCustomerList) ->
+        io:fwrite("\n\nCustomers:\n"),
+        io:fwrite("~w",[FinalCustomerList]).
+        % io:fwrite("~w: objective ~w, received ~w\n",[CustomerName, OriginalRequestedAmount, CustomerAmount]).
+
+    display_message_on_screen(BankMap, BankCount, CustomerMap, CustomerCount, FinalBankList, FinalCustomerList) ->
         receive
             {"TransactionApproved", CustomerName, AmountRequested, BankName} ->
                 io:fwrite("$ The ~w bank approves a loan of ~w dollar(s) to ~w\n",[BankName, AmountRequested, CustomerName]),
-                display_message_on_screen(BankMap, BankCount, CustomerMap, CustomerCount);
+                display_message_on_screen(BankMap, BankCount, CustomerMap, CustomerCount, FinalBankList, FinalCustomerList);
             {"TransactionRejected", CustomerName, AmountRequested, BankName} ->
                 io:fwrite("$ The ~w bank denies a loan of ~w dollar(s) to ~w\n",[BankName, AmountRequested, CustomerName]),
-                display_message_on_screen(BankMap, BankCount, CustomerMap, CustomerCount);
+                display_message_on_screen(BankMap, BankCount, CustomerMap, CustomerCount, FinalBankList, FinalCustomerList);
             {"TransactionRequest", CustomerName, AmountRequested, BankName} ->
                 io:fwrite("? ~w requests a loan of ~w dollar(s) from the ~w bank\n",[CustomerName, AmountRequested, BankName]),
-                display_message_on_screen(BankMap, BankCount, CustomerMap, CustomerCount);
+                display_message_on_screen(BankMap, BankCount, CustomerMap, CustomerCount, FinalBankList, FinalCustomerList);
             {"BankThreadEnded", BankName, BankAmount, OriginalAmount} ->
                 CurrentBankSize = maps:size(BankMap),
                 if CurrentBankSize == BankCount ->
-                    io:fwrite("\n\nBanks:\n"),
                     TempBankMap = maps:remove(BankName, BankMap),
-                    display_bank_report(BankName, BankAmount, OriginalAmount),
-                    display_message_on_screen(TempBankMap, BankCount, CustomerMap, CustomerCount);
+                    TempTuple = {BankName, BankAmount, OriginalAmount},
+                    NewList = [TempTuple | FinalBankList],
+                    display_message_on_screen(TempBankMap, BankCount, CustomerMap, CustomerCount, NewList, FinalCustomerList);
                 true ->
-                    display_bank_report(BankName, BankAmount, OriginalAmount),
-                    display_message_on_screen(BankMap, BankCount, CustomerMap, CustomerCount)
+                    if CurrentBankSize == 1 ->
+                        TempBankMap = maps:remove(BankName, BankMap),
+                        TempTuple = {BankName, BankAmount, OriginalAmount},
+                        NewList = [TempTuple | FinalBankList],
+                        display_bank_report(NewList),
+                        display_message_on_screen(TempBankMap, BankCount, CustomerMap, CustomerCount, NewList, FinalCustomerList);
+                    true ->
+                        TempBankMap = maps:remove(BankName, BankMap),
+                        TempTuple = {BankName, BankAmount, OriginalAmount},
+                        NewList = [TempTuple | FinalBankList],
+                        display_message_on_screen(TempBankMap, BankCount, CustomerMap, CustomerCount, NewList, FinalCustomerList)
+                    end
                 end;
                 
 
@@ -105,16 +123,26 @@
                 CurrentCustomerSize = maps:size(CustomerMap),
                 if CurrentCustomerSize == CustomerCount ->
                     io:fwrite("\n\n** Banking Report **\n"),
-                    io:fwrite("\n\nCustomers:\n"),
                     TempCustomerMap = maps:remove(CustomerName, CustomerMap),
-                    display_customer_report(CustomerName, CustomerAmount, OriginalRequestedAmount),
-                    display_message_on_screen(BankMap, BankCount, TempCustomerMap, CustomerCount);
+                    TempTuple = {CustomerName, CustomerAmount, OriginalRequestedAmount},
+                    NewList = [TempTuple | FinalCustomerList],
+                    display_message_on_screen(BankMap, BankCount, TempCustomerMap, CustomerCount, FinalBankList, NewList);
                 true ->
-                    display_customer_report(CustomerName, CustomerAmount, OriginalRequestedAmount),
-                    display_message_on_screen(BankMap, BankCount, CustomerMap, CustomerCount)
+                    if CurrentCustomerSize == 1 ->
+                        TempCustomerMap = maps:remove(CustomerName, CustomerMap),
+                        TempTuple = {CustomerName, CustomerAmount, OriginalRequestedAmount},
+                        NewList = [TempTuple | FinalCustomerList],
+                        display_customer_report(NewList),
+                        display_message_on_screen(BankMap, BankCount, TempCustomerMap, CustomerCount, FinalBankList, NewList);
+                    true ->
+                        TempCustomerMap = maps:remove(CustomerName, CustomerMap),
+                        TempTuple = {CustomerName, CustomerAmount, OriginalRequestedAmount},
+                        NewList = [TempTuple | FinalCustomerList],
+                        display_message_on_screen(BankMap, BankCount, TempCustomerMap, CustomerCount, FinalBankList, NewList)
+                    end
                 end
 
-            after 5000 ->
+            after 3000 ->
                 io:fwrite("\n\nThe financial market is closing for the day...\n")
 
 
