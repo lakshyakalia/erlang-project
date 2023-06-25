@@ -1,0 +1,5 @@
+erlc customer.erl
+erlc bank.erl
+erlc money.erl
+
+erl -noshell -run money start c1.txt b1.txt -s init stop
